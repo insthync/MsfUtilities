@@ -9,8 +9,6 @@ public class MsfClientManager : MonoBehaviour
 {
     public static MsfClientManager Singleton { get; protected set; }
 
-    [System.Serializable]
-    public class StringUnityEvent : UnityEvent<string> { }
     [Header("Connection to Master Server")]
     [Tooltip("Address to the server")]
     public string masterIp = "127.0.0.1";
@@ -27,11 +25,11 @@ public class MsfClientManager : MonoBehaviour
     [Header("Activities events")]
     public UnityEvent onMasterServerConnected;
     public UnityEvent onMasterServerDisconnected;
-    public StringUnityEvent onMasterServerConnectFailed;
-    public StringUnityEvent onLoggedIn;
-    public StringUnityEvent onLoginFailed;
+    public UnityEvent_String onMasterServerConnectFailed;
+    public UnityEvent_String onLoggedIn;
+    public UnityEvent_String onLoginFailed;
     public UnityEvent onRegistered;
-    public StringUnityEvent onRegisterFailed;
+    public UnityEvent_String onRegisterFailed;
 
     public string Status { get; protected set; }
     protected BmLogger Logger = Msf.Create.Logger(typeof(MsfClientManager).Name);
