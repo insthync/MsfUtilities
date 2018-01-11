@@ -1,12 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using Barebones.Logging;
 using Barebones.MasterServer;
 
 public class MsfClientManager : MonoBehaviour
 {
     public static MsfClientManager Singleton { get; protected set; }
+
+    [System.Serializable]
+    public class StringUnityEvent : UnityEvent<string> { }
     [Header("Connection to Master Server")]
     [Tooltip("Address to the server")]
     public string masterIp = "127.0.0.1";
@@ -19,6 +23,15 @@ public class MsfClientManager : MonoBehaviour
     [Tooltip("If true, will try to connect on failed")]
     public bool reconnectToMasterOnFailed = true;
     public float connectToMasterTimeout = 10f;
+
+    [Header("Activities events")]
+    public UnityEvent onMasterServerConnected;
+    public UnityEvent onMasterServerDisconnected;
+    public StringUnityEvent onMasterServerConnectFailed;
+    public StringUnityEvent onLoggedIn;
+    public StringUnityEvent onLoginFailed;
+    public UnityEvent onRegistered;
+    public StringUnityEvent onRegisterFailed;
 
     public string Status { get; protected set; }
     protected BmLogger Logger = Msf.Create.Logger(typeof(MsfClientManager).Name);
@@ -90,14 +103,18 @@ public class MsfClientManager : MonoBehaviour
     {
         StopBackgroundCoroutine();
         Status = string.Empty;
-        // TODO: Poll any events
+
+        if (onMasterServerConnected != null)
+            onMasterServerConnected.Invoke();
     }
 
     protected virtual void OnMasterServerDisconnected()
     {
         StopBackgroundCoroutine();
         Status = string.Empty;
-        // TODO: Poll any events
+
+        if (onMasterServerDisconnected != null)
+            onMasterServerDisconnected.Invoke();
     }
 
     private void OnMasterServerConnectionFailed(string errorMsg)
@@ -107,6 +124,9 @@ public class MsfClientManager : MonoBehaviour
         Msf.Connection.Connected -= OnMasterServerConnected;
         Msf.Connection.Disconnected -= OnMasterServerDisconnected;
 
+        if (onMasterServerConnectFailed != null)
+            onMasterServerConnectFailed.Invoke(errorMsg);
+
         if (reconnectToMasterOnFailed)
             ConnectToMasterServer();
     }
@@ -115,7 +135,7 @@ public class MsfClientManager : MonoBehaviour
     {
         if (!Msf.Connection.IsConnected)
         {
-            Logger.Error("[LogInAsGuest] master server not connected");
+            OnLoginFailed("Master server not connected");
             return;
         }
 
@@ -132,7 +152,7 @@ public class MsfClientManager : MonoBehaviour
     {
         if (!Msf.Connection.IsConnected)
         {
-            Logger.Error("[Login] master server not connected");
+            OnLoginFailed("Master server not connected");
             return;
         }
 
@@ -147,20 +167,25 @@ public class MsfClientManager : MonoBehaviour
 
     protected virtual void OnLoggedIn(string username)
     {
-        StopBackgroundCoroutine();
         Status = string.Format("Logged in: {0}", username);
+
+        if (onLoggedIn != null)
+            onLoggedIn.Invoke(username);
     }
 
     protected virtual void OnLoginFailed(string errorMsg)
     {
         Status = string.Format("Login failed: {0}", errorMsg);
+
+        if (onLoginFailed != null)
+            onLoginFailed.Invoke(errorMsg);
     }
 
     public void Register(string username, string password, string email)
     {
         if (!Msf.Connection.IsConnected)
         {
-            Logger.Error("[Register] master server not connected");
+            OnRegisterFailed("Master server not connected");
             return;
         }
 
@@ -182,12 +207,17 @@ public class MsfClientManager : MonoBehaviour
 
     protected virtual void OnRegistered()
     {
-        StopBackgroundCoroutine();
         Status = string.Format("Registered");
+
+        if (onRegistered != null)
+            onRegistered.Invoke();
     }
 
     protected virtual void OnRegisterFailed(string errorMsg)
     {
         Status = string.Format("Register failed: {0}", errorMsg);
+
+        if (onRegisterFailed != null)
+            onRegisterFailed.Invoke(errorMsg);
     }
 }
