@@ -32,7 +32,7 @@ public class MsfClientManager : MonoBehaviour
     public UnityEvent_String onRegisterFailed;
 
     public string Status { get; protected set; }
-    protected BmLogger Logger = Msf.Create.Logger(typeof(MsfClientManager).Name);
+    protected readonly BmLogger Logger = Msf.Create.Logger(typeof(MsfClientManager).Name);
     protected IEnumerator backgroundCoroutine;
 
     private void Awake()
